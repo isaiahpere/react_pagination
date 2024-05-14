@@ -1,34 +1,21 @@
 import { useEffect, useState } from "react";
 
-import { Products } from "./types/products";
+import { ProductsType } from "./types/products";
 
 import "./App.css";
-
-type ProductsProps = {
-  brand: string;
-  category: string;
-  description: string;
-  discountPercentage: number;
-  id: number;
-  images: string[];
-  price: number;
-  rating: number;
-  stock: number;
-  thumbnail: string;
-  title: string;
-};
+import Product from "./components/product";
+import Pagination from "./components/pagination";
 
 function App() {
-  const [products, setProducts] = useState<Products[]>([]);
+  const [products, setProducts] = useState<ProductsType[]>([]);
   const [isLoading, setIsLoading] = useState<Boolean>(false);
   const [page, setPage] = useState<number>(1);
 
-  // fetching data from API
   useEffect(() => {
     setIsLoading(true);
     const fetchData = async () => {
       try {
-        let response = await fetch("https://dummyjson.com/products?limit=100");
+        let response = await fetch("https://dummyjson.com/products?limit=95");
         let data = await response.json();
         if (data && data?.products) {
           setProducts(data.products);
@@ -42,17 +29,24 @@ function App() {
     fetchData();
   }, []);
 
+  const scrollTopPage = () => {
+    window.scrollTo(0, 0);
+  };
+
   const handlePage = (pageNumber: number) => {
     console.log(pageNumber);
     setPage(pageNumber);
+    scrollTopPage();
   };
 
   const handlePrev = () => {
     setPage((prev) => (prev - 1) % products.length);
+    scrollTopPage();
   };
 
   const handleNext = () => {
     setPage((prev) => (prev + 1) % products.length);
+    scrollTopPage();
   };
 
   if (products.length < 1) return null;
@@ -62,42 +56,17 @@ function App() {
       {isLoading && <p>Loading...</p>}
       {!isLoading && (
         <div className="products">
-          {products.slice(page * 10 - 10, page * 10).map((item) => (
-            <div key={item.id} className="product">
-              <img src={item.thumbnail} alt={item.title} />
-              <p>
-                {item.title} - {item.id}
-              </p>
-            </div>
-          ))}
+          <Product items={products} currentPage={page} />
         </div>
       )}
       {!isLoading && (
-        <div className="pagination">
-          <button
-            onClick={handlePrev}
-            disabled={page === 1}
-            className={`${page === 1 ? "disabled" : ""}`}
-          >
-            Next
-          </button>
-          {[...Array(products.length / 10)].map((_, index) => (
-            <button
-              className={`page-number ${index + 1 === page ? "selected" : ""}`}
-              key={`id - ${index + 1}`}
-              onClick={() => handlePage(index + 1)}
-            >
-              {index + 1}
-            </button>
-          ))}
-          <button
-            onClick={handleNext}
-            disabled={page === 10}
-            className={`${page === 10 ? "disabled" : ""}`}
-          >
-            Prev
-          </button>
-        </div>
+        <Pagination
+          currentPage={page}
+          handleNextPage={handleNext}
+          handlePrevPage={handlePrev}
+          handlePagechange={handlePage}
+          items={products}
+        />
       )}
     </div>
   );
